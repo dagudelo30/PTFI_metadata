@@ -1,290 +1,107 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PTFI Core Metadata Schema</title>
-<style>
-  :root{
-    --bg:#FAFBFC; --panel:#FFFFFF; --ink:#14181B; --muted:#5C6670; --line:#E4E7E9;
-    --col-collection:#B45309; --col-specimen:#15803D; --col-sample:#0E7490;
-    --col-aliquot:#6D28D9; --col-management:#475569;
-    --exact:#15803D; --close:#B45309; --orig:#334155;
-    --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
-    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0}
-  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;
-    -webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1,"cv11" 1}
-  a{color:inherit}
-  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
-
-  header{padding:40px 0 8px}
-  .topline{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
-  .brand{display:flex;align-items:center;gap:12px}
-  .mark{width:30px;height:30px;border:2px solid var(--ink);border-radius:7px;display:grid;
-    place-items:center;font-weight:800;font-size:13px;letter-spacing:-.5px}
-  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
-  .dl{font-size:13px;font-weight:600;text-decoration:none;border:1px solid var(--line);
-    background:var(--panel);padding:8px 14px;border-radius:9px;white-space:nowrap}
-  .dl:hover{border-color:var(--ink)}
-  h1{font-size:clamp(30px,5vw,46px);line-height:1.02;letter-spacing:-.025em;margin:22px 0 10px;font-weight:800}
-  .thesis{font-size:16px;color:var(--muted);max-width:60ch;margin:0 0 22px}
-
-  .stats{display:flex;gap:28px;flex-wrap:wrap;border-top:1px solid var(--line);
-    border-bottom:1px solid var(--line);padding:16px 0;margin-bottom:26px}
-  .stat .n{font-size:24px;font-weight:800;letter-spacing:-.02em}
-  .stat .l{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
-
-  /* provenance chain spine */
-  .spine-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
-    font-weight:600;margin-bottom:10px}
-  .spine{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin-bottom:14px}
-  .node{flex:1 1 0;min-width:128px;text-align:left;background:var(--panel);border:1px solid var(--line);
-    padding:11px 13px;cursor:pointer;position:relative;font:inherit;color:inherit}
-  .node:not(:last-child){border-right:0}
-  .node:first-child{border-radius:11px 0 0 11px}
-  .chain .node:last-of-type{border-radius:0}
-  .node .step{font-family:var(--mono);font-size:11px;color:var(--muted)}
-  .node .nm{font-weight:700;font-size:14px;margin-top:2px;display:flex;align-items:center;gap:7px}
-  .node .ct{font-size:11px;color:var(--muted);margin-top:1px}
-  .node .swatch{width:9px;height:9px;border-radius:50%}
-  .node[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 -3px 0 var(--nodecol)}
-  .node:hover{border-color:var(--ink)}
-  .mgmt{margin-left:10px;flex:0 0 auto;border-radius:11px}
-  @media(max-width:680px){.node{flex:1 1 40%;border-right:1px solid var(--line)!important;
-    border-radius:9px!important;margin:3px} .spine{gap:0} .mgmt{margin-left:3px}}
-
-  .controls{display:flex;gap:12px;align-items:center;margin:22px 0 6px;flex-wrap:wrap}
-  #q{flex:1;min-width:220px;font:inherit;font-size:15px;padding:11px 14px;border:1px solid var(--line);
-    border-radius:10px;background:var(--panel)}
-  #q:focus{outline:2px solid var(--ink);outline-offset:1px;border-color:transparent}
-  .clearf{font-size:13px;color:var(--muted);background:none;border:0;cursor:pointer;font-weight:600}
-  .resultct{font-size:13px;color:var(--muted);margin:2px 0 18px}
-
-  .modhead{display:flex;align-items:baseline;gap:12px;margin:30px 0 8px;padding-bottom:7px;
-    border-bottom:2px solid var(--modcol)}
-  .modhead h2{font-size:18px;margin:0;font-weight:800;letter-spacing:-.01em}
-  .modhead .step{font-family:var(--mono);font-size:12px;color:var(--modcol);font-weight:700}
-  .modhead .blurb{font-size:13px;color:var(--muted);margin-left:auto;text-align:right;max-width:42ch}
-
-  .row{border:1px solid var(--line);border-radius:11px;background:var(--panel);margin:8px 0;overflow:hidden}
-  .row > summary{list-style:none;cursor:pointer;display:grid;
-    grid-template-columns:minmax(0,1.4fr) minmax(0,1.5fr) auto;gap:14px;align-items:center;padding:13px 16px}
-  .row > summary::-webkit-details-marker{display:none}
-  .row[open]{border-color:var(--ink)}
-  .term{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--modcol);
-    word-break:break-word}
-  .term .ns{color:var(--muted);font-weight:400}
-  .lab{font-weight:600;font-size:15px}
-  .lab .def1{font-weight:400;font-size:13px;color:var(--muted);display:block;margin-top:1px;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .meta{display:flex;gap:7px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
-  .chip{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap;
-    letter-spacing:.02em;border:1px solid var(--line)}
-  .ob-Required{background:#FEF2F2;color:#B91C1C;border-color:#FCD7D7}
-  .ob-Conditional{background:#FFF7ED;color:#B45309;border-color:#FBDBA7}
-  .ob-Optional{background:#F1F5F9;color:#475569;border-color:#E2E8F0}
-  .ob-Curator-assigned{background:#F5F3FF;color:#6D28D9;border-color:#E4Dafe}
-  .map{font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap}
-  .map.exact{background:#ECFDF3;color:var(--exact)}
-  .map.close{background:#FEF6EC;color:var(--close)}
-  .map.orig{background:#F1F5F9;color:var(--orig)}
-
-  .body{padding:2px 16px 18px;border-top:1px dashed var(--line);margin:0 0 0;font-size:14px}
-  .body dl{display:grid;grid-template-columns:150px 1fr;gap:6px 18px;margin:14px 0 0}
-  .body dt{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;padding-top:2px}
-  .body dd{margin:0}
-  .uri{font-family:var(--mono);font-size:12px;color:var(--muted);word-break:break-all}
-  .recon{background:#FFFCF5;border:1px solid #F2E6C9;border-radius:8px;padding:9px 12px;margin-top:14px;
-    font-size:13px;color:#6b5a2e}
-  .recon b{color:#85661f}
-
-  .state{border:1px dashed var(--line);border-radius:12px;padding:28px;text-align:center;color:var(--muted);
-    background:var(--panel)}
-  .state code{font-family:var(--mono);font-size:12px;background:#F1F5F9;padding:2px 6px;border-radius:5px;color:var(--ink)}
-  footer{color:var(--muted);font-size:13px;border-top:1px solid var(--line);margin-top:48px;padding:22px 0 60px}
-  footer a{font-weight:600}
-  @media(max-width:680px){
-    .row > summary{grid-template-columns:1fr;gap:8px}
-    .meta{justify-content:flex-start}
-    .modhead .blurb{display:none}
-    .body dl{grid-template-columns:1fr}
-  }
-  @media(prefers-reduced-motion:no-preference){
-    .row{animation:rise .4s ease both}
-    @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PTFI Core Metadata Schema — Reference</title>
+  <meta name="description" content="Reference documentation for the Periodic Table of Food Initiative (PTFI) Core Metadata Schema — 47 elements across five facets describing every data point collected for food samples.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="topline">
-      <div class="brand">
-        <div class="mark">PT</div>
-        <div>
-          <div class="eyebrow">Periodic Table of Food Initiative</div>
-          <div style="font-weight:700">Core Metadata Schema</div>
-        </div>
+
+  <!-- ===== Top bar ===== -->
+  <header class="topbar">
+    <div class="rainbow"></div>
+    <div class="topbar-inner">
+      <a class="brand" href="#top" aria-label="PTFI home">
+        <img src="assets/ptfi-logo.png" alt="The Periodic Table of Food Initiative">
+        <span class="div"></span>
+        <span class="kicker">Core Metadata Schema<span>Reference &amp; data dictionary</span></span>
+      </a>
+      <div class="topsearch">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="search" type="search" placeholder="Search elements, definitions, values…" autocomplete="off" aria-label="Search metadata elements">
       </div>
-      <a class="dl" href="ptfi-core-schema.csv" download>↓ Download CSV</a>
+      <button class="btn-csv" data-csv>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 21h14"/></svg>
+        Download CSV
+      </button>
     </div>
-    <h1>The variables behind every food sample.</h1>
-    <p class="thesis">A FAIR data dictionary for the PTFI sample life cycle. Every element has a stable
-      <code style="font-family:var(--mono);font-size:13px">ptfi:</code> identifier and, where one exists,
-      a mapping to an established standard so the data stays interoperable beyond PTFI.</p>
-
-    <div class="stats" id="stats"></div>
-
-    <div class="spine-label">Filter by group · the sample life cycle</div>
-    <div class="spine" id="spine"></div>
   </header>
 
-  <div class="controls">
-    <input id="q" type="search" placeholder="Search a variable, definition, or standard (e.g. country, dwc:, weight)…" autocomplete="off">
-    <button class="clearf" id="clear" hidden>Clear</button>
+  <!-- ===== Hero ===== -->
+  <section class="hero" id="top">
+    <div class="hero-inner">
+      <div class="eyebrow">Periodic Table of Food Initiative</div>
+      <h1>The PTFI Core Metadata Schema</h1>
+      <p class="lead">A harmonized, FAIR data dictionary describing every metadata element collected for a food sample — from where and when it was gathered, through its biology and laboratory processing, to the persistent ontology identifiers that make it interoperable across the world's food composition data.</p>
+      <div class="meta">
+        <span class="chip"><b id="statTotal">47</b> metadata elements</span>
+        <span class="chip"><b>5</b> facets</span>
+        <span class="chip"><b id="statReq">—</b> required at intake</span>
+        <span class="chip">Schema <b>v7.0.0</b> · Rev. 2025-12-17</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Schema map (rebuilt Figure 1) ===== -->
+  <div class="schema">
+    <div class="schema-frame">
+      <div class="schema-cap">
+        <h2>The schema at a glance — <b>Food Collection → Specimen → Sample → Curation</b></h2>
+        <span class="hint">Click any facet to jump to its elements</span>
+      </div>
+      <div class="facet-grid" id="facetGrid"></div>
+      <div class="roles" id="roles"></div>
+    </div>
   </div>
-  <div class="resultct" id="resultct"></div>
 
-  <main id="list"></main>
+  <!-- ===== Body ===== -->
+  <div class="wrap">
+    <aside class="sidebar">
+      <h4>Filter by facet</h4>
+      <div class="filterbar" id="filterChips"></div>
+      <h4 style="margin-top:22px">On this page</h4>
+      <ul class="sb-nav" id="sbNav"></ul>
+    </aside>
+    <main class="content" id="content"></main>
+  </div>
 
-  <footer>
-    PTFI namespace <span class="uri">https://foodperiodictable.org/ptfi/terms/</span><br>
-    This page renders <a href="ptfi-core-schema.csv">ptfi-core-schema.csv</a> live — edit that one file and the view updates.
+  <!-- ===== Footer ===== -->
+  <footer class="foot">
+    <div class="foot-inner">
+      <div>
+        <img src="assets/ptfi-logo.png" alt="PTFI">
+        <p>The PTFI Core Metadata framework captures the contextual, biological, and procedural differences that drive variation in food composition — establishing a harmonized yet adaptable standard for FAIR, cross-domain data integration.</p>
+      </div>
+      <div>
+        <h4>Standards &amp; ontologies</h4>
+        <ul>
+          <li><a href="https://foodon.org/" target="_blank" rel="noopener">FoodOn ontology</a></li>
+          <li><a href="https://www.ncbi.nlm.nih.gov/taxonomy" target="_blank" rel="noopener">NCBI Taxonomy</a></li>
+          <li><a href="https://www.ebi.ac.uk/ols4" target="_blank" rel="noopener">EMBL-EBI OLS</a></li>
+          <li><a href="https://www.iso.org/iso-3166-country-codes.html" target="_blank" rel="noopener">ISO 3166 / ISO 639</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="#" data-csv>Download schema (CSV)</a></li>
+          <li><a href="https://foodperiodictable.org/" target="_blank" rel="noopener">foodperiodictable.org</a></li>
+          <li><a href="https://ptfi.community.versobio.com/" target="_blank" rel="noopener">PTFI Research Community Hub</a></li>
+          <li><a href="/cdn-cgi/l/email-protection#76055814041f181d1a130f3615111f170458190411">Questions — contact PTFI</a></li>
+        </ul>
+      </div>
+      <div class="legal">
+        Compiled from the PTFI New Food Collection Form and Core Metadata SOPs (Quality Check, FoodOn ID, Term Request). Definitions and curation guidance are normative to the PTFI curation pipeline. © The Periodic Table of Food Initiative (PTFI).
+      </div>
+    </div>
   </footer>
-</div>
 
-<script>
-const NS = "https://foodperiodictable.org/ptfi/terms/";
-// Groups exactly as defined in the source Excel (the truth)
-const GROUPS = {
-  Study:{step:"01", color:"var(--col-management)", name:"Study",
-    blurb:"The collection effort: study, collector, organisation."},
-  Specimen:{step:"02", color:"var(--col-specimen)", name:"Specimen",
-    blurb:"The physical food item — where & when collected, organism, form, condition."},
-  Sample:{step:"03", color:"var(--col-sample)", name:"Sample",
-    blurb:"Material derived in the lab and how it was prepared."},
-  Aliquot:{step:"04", color:"var(--col-aliquot)", name:"Aliquot",
-    blurb:"The measured fraction taken for analysis."},
-};
-const ORDER = ["Study","Specimen","Sample","Aliquot"];
-let DATA = [], active = null;
-
-function parseCSV(text){
-  const rows=[]; let row=[], field="", q=false;
-  for(let i=0;i<text.length;i++){const c=text[i];
-    if(q){ if(c==='"'){ if(text[i+1]==='"'){field+='"';i++;} else q=false; } else field+=c; }
-    else { if(c==='"')q=true;
-      else if(c===','){row.push(field);field="";}
-      else if(c==='\n'){row.push(field);rows.push(row);row=[];field="";}
-      else if(c==='\r'){}
-      else field+=c; } }
-  if(field.length||row.length){row.push(field);rows.push(row);}
-  const head=rows.shift().map(h=>h.trim());
-  return rows.filter(r=>r.some(c=>c!=="")).map(r=>{const o={};head.forEach((h,i)=>o[h]=(r[i]||"").trim());return o;});
-}
-
-function mapBadge(d){
-  if(!d.maps_to) return `<span class="map orig" title="Original PTFI term — no external equivalent">ptfi · original</span>`;
-  const kind = d.match_type.includes("exact") ? "exact" : "close";
-  const sym = kind==="exact" ? "≡" : "≈";
-  return `<span class="map ${kind}" title="${d.match_type}">${sym} ${d.maps_to}</span>`;
-}
-
-function render(){
-  const q=document.getElementById("q").value.trim().toLowerCase();
-  const list=document.getElementById("list"); list.innerHTML="";
-  let shown=0;
-  ORDER.forEach(mod=>{
-    let items=DATA.filter(d=>d.group===mod);
-    if(active && active!==mod) return;
-    if(q) items=items.filter(d=>(d.ptfi_term+" "+d.label+" "+d.definition+" "+d.maps_to).toLowerCase().includes(q));
-    if(!items.length) return;
-    const M=GROUPS[mod];
-    const head=document.createElement("div");
-    head.className="modhead"; head.style.setProperty("--modcol",M.color);
-    head.innerHTML=`<span class="step">${M.step}</span><h2>${M.name}</h2><span class="blurb">${M.blurb}</span>`;
-    list.appendChild(head);
-    items.forEach(d=>{
-      shown++;
-      const det=document.createElement("details"); det.className="row"; det.style.setProperty("--modcol",M.color);
-      const def1 = d.definition ? `<span class="def1">${esc(d.definition)}</span>`:"";
-      det.innerHTML=`
-        <summary>
-          <span><span class="term"><span class="ns">ptfi:</span>${esc(d.ptfi_term)}</span></span>
-          <span class="lab">${esc(d.label)}${def1}</span>
-          <span class="meta">
-            <span class="chip ob-${(d.obligation||'').replace(/\s/g,'-')}">${esc(d.obligation||'—')}</span>
-            ${mapBadge(d)}
-          </span>
-        </summary>
-        <div class="body">
-          <dl>
-            <dt>Identifier</dt><dd class="uri">${NS}${esc(d.ptfi_term)}</dd>
-            <dt>Definition</dt><dd>${esc(d.definition)||'—'}</dd>
-            <dt>Datatype</dt><dd>${esc(d.datatype)||'—'} · ${esc(d.occurrence)||'unique'}</dd>
-            ${d.value_scheme?`<dt>Value scheme</dt><dd>${esc(d.value_scheme)}</dd>`:""}
-            ${d.allowed_values?`<dt>Allowed values</dt><dd>${esc(d.allowed_values)}</dd>`:""}
-            ${d.examples?`<dt>Examples</dt><dd>${esc(d.examples)}</dd>`:""}
-            <dt>Maps to</dt><dd>${d.maps_to?`<span class="uri">${esc(d.maps_to)}</span> &nbsp;<span style="color:var(--muted)">(${esc(d.match_type)})</span>`:'Original PTFI term — no external equivalent'}</dd>
-            ${d.curation_note?`<dt>Curation note</dt><dd>${esc(d.curation_note)}</dd>`:""}
-          </dl>
-          ${d.reconciliation_note?`<div class="recon"><b>Reconciliation note.</b> ${esc(d.reconciliation_note)}</div>`:""}
-        </div>`;
-      list.appendChild(det);
-    });
-  });
-  if(!shown){ list.innerHTML=`<div class="state">No variables match “${esc(q)}”. Try a broader term or clear the filter.</div>`; }
-  document.getElementById("resultct").textContent =
-    `${shown} of ${DATA.length} variables${active?` · ${GROUPS[active].name}`:""}${q?` · “${q}”`:""}`;
-  document.getElementById("clear").hidden = !(q||active);
-}
-
-function buildChrome(){
-  // stats
-  const exact=DATA.filter(d=>d.match_type.includes("exact")).length;
-  const close=DATA.filter(d=>d.match_type.includes("close")).length;
-  const orig=DATA.filter(d=>!d.maps_to).length;
-  const req=DATA.filter(d=>d.obligation==="Required").length;
-  document.getElementById("stats").innerHTML=[
-    [DATA.length,"variables"],[req,"required at intake"],
-    [exact,"exact standard match"],[close,"close match"],[orig,"PTFI-original"]
-  ].map(([n,l])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
-  // spine
-  const spine=document.getElementById("spine"); spine.className="spine chain";
-  ORDER.forEach(mod=>{
-    const M=GROUPS[mod], ct=DATA.filter(d=>d.group===mod).length;
-    const b=document.createElement("button");
-    b.className="node"; b.style.setProperty("--nodecol",M.color);
-    b.setAttribute("aria-pressed","false");
-    b.innerHTML=`<span class="step">${M.step}</span>
-      <span class="nm"><span class="swatch" style="background:${M.color}"></span>${M.name}</span>
-      <span class="ct">${ct} variables</span>`;
-    b.onclick=()=>{active = (active===mod)?null:mod;
-      [...spine.children].forEach((n,i)=>n.setAttribute("aria-pressed", ORDER[i]===active));
-      render();};
-    spine.appendChild(b);
-  });
-}
-function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
-
-document.getElementById("q").addEventListener("input",render);
-document.getElementById("clear").addEventListener("click",()=>{
-  document.getElementById("q").value="";active=null;
-  [...document.getElementById("spine").children].forEach(n=>n.setAttribute("aria-pressed","false"));
-  render();});
-
-fetch("ptfi-core-schema.csv")
-  .then(r=>{if(!r.ok)throw 0;return r.text();})
-  .then(t=>{DATA=parseCSV(t);buildChrome();render();})
-  .catch(()=>{document.getElementById("list").innerHTML=
-    `<div class="state">Couldn’t load <code>ptfi-core-schema.csv</code>.<br><br>
-     Open this page over HTTP — on GitHub Pages it works directly, or locally run
-     <code>python3 -m http.server</code> in this folder and visit <code>localhost:8000</code>.
-     Opening the file with <code>file://</code> blocks the CSV from loading.</div>`;
-    document.getElementById("resultct").textContent="";});
-</script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="terms.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
