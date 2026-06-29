@@ -25,7 +25,7 @@
       const extra = terms.length - shown.length;
       return `<a class="facet-card" href="#facet-${f.id}" style="${facetVars(f.id)}">
         <div class="fc-head" style="background:var(--${f.id}-fill)">
-          <div class="fc-n">Facet ${FACETS.indexOf(f) + 1}</div>
+          <div class="fc-n">Category ${FACETS.indexOf(f) + 1}</div>
           <div class="fc-name">${esc(f.name)}</div>
           <div class="fc-count">${terms.length} elements</div>
         </div>
@@ -34,9 +34,7 @@
     }).join("");
 
     // role grouping labels (Figure 1 gray bands)
-    const roleSpec = [
-      { label: "Food Collector Metadata" }, { label: "Laboratory Metadata" }, { label: "Curation Metadata" },
-    ];
+    const roleSpec = [...new Set(FACETS.map((f) => f.role))].map((label) => ({ label }));
     $("#roles").innerHTML = roleSpec.map((r) => `<div class="role"><i></i>${esc(r.label)}</div>`).join("");
   }
 
@@ -61,7 +59,7 @@
   function termCard(t) {
     const f = FACETS.find((x) => x.id === t.facet);
     const rows = [];
-    rows.push(`<tr><th>Module</th><td>${esc(f.name)}</td></tr>`);
+    rows.push(`<tr><th>Category</th><td>${esc(f.name)}</td></tr>`);
     rows.push(`<tr><th>Requirement</th><td>${esc(REQ_LABEL[t.required])}</td></tr>`);
     rows.push(`<tr><th>Data type</th><td>${esc(t.type)}</td></tr>`);
     if (t.format) rows.push(`<tr><th>Format</th><td><span class="mono">${esc(t.format)}</span></td></tr>`);
@@ -69,6 +67,9 @@
       rows.push(`<tr><th>Allowed values</th><td><div class="vals">${t.values.map((v) => `<span class="v">${esc(v)}</span>`).join("")}</div></td></tr>`);
     if (t.mapsTo && t.mapsTo.length)
       rows.push(`<tr><th>Maps to</th><td><div class="maps">${t.mapsTo.map((m) => `<a href="${esc(m.href)}" target="_blank" rel="noopener">${esc(m.label)} ${ICON.ext}</a>`).join("")}</div></td></tr>`);
+    rows.push(`<tr><th>Interoperability</th><td>${t.standard
+      ? `<div class="maps"><a href="${esc(t.standard.href)}" target="_blank" rel="noopener">${esc(t.standard.term)} ${ICON.ext}</a><span class="match m-${t.standard.match}">${t.standard.match === "exact" ? "exact match" : "close match"}</span></div>`
+      : `<span class="orig-note">Original PTFI term — no external equivalent</span>`}</td></tr>`);
     if (t.examples && t.examples.length)
       rows.push(`<tr><th>Examples</th><td><div class="ex">${t.examples.map((e) => `<span class="e">${esc(e)}</span>`).join("")}</div></td></tr>`);
 
@@ -90,14 +91,14 @@
   /* ---------- Facet sections ---------- */
   function renderContent() {
     $("#content").innerHTML =
-      `<div class="intro-note"><b>How to read this page.</b> The PTFI Core Metadata Schema comprises <b>47 elements</b> across five facets that follow the food-sampling workflow — from field collection to laboratory processing to curation. Each element below lists its definition, requirement level, format, controlled values, the external standard it maps to (FoodOn, NCBI Taxonomy, ISO), worked examples, and a curation note drawn from the PTFI SOPs.</div>` +
+      `<div class="intro-note"><b>How to read this page.</b> The PTFI Core Metadata Schema comprises <b>44 elements</b> across four categories that follow the food-sampling workflow — from study and field collection to laboratory processing. Each element below lists its definition, requirement level, format, controlled values, the external standard it maps to (FoodOn, NCBI Taxonomy, ISO), worked examples, and a curation note drawn from the PTFI SOPs.</div>` +
       FACETS.map((f) => {
         const terms = TERMS.filter((t) => t.facet === f.id);
         return `<section class="facet-sec" id="facet-${f.id}" data-facet-sec="${f.id}" style="${facetVars(f.id)}">
           <div class="facet-banner">
             <div class="fb-top">
               <h2>${esc(f.name)}</h2>
-              <span class="fb-tag">Facet ${FACETS.indexOf(f) + 1} · ${terms.length} elements</span>
+              <span class="fb-tag">Category ${FACETS.indexOf(f) + 1} · ${terms.length} elements</span>
               <span class="fb-role">${esc(f.role)}</span>
             </div>
             <p>${esc(f.blurb)}</p>
@@ -152,7 +153,7 @@
 
   /* ---------- CSV export ---------- */
   function toCSV() {
-    const cols = ["Element", "Facet", "Requirement", "Data type", "Format", "Definition", "Allowed values", "Maps to", "Examples", "Curation note"];
+    const cols = ["Element", "Facet", "Requirement", "Data type", "Format", "Definition", "Allowed values", "Maps to", "Interoperability", "Examples", "Curation note"];
     const q = (v) => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
     const lines = [cols.map(q).join(",")];
     TERMS.forEach((t) => {
@@ -161,6 +162,7 @@
         t.name, f.name, REQ_LABEL[t.required], t.type, t.format || "",
         t.definition, (t.values || []).join("; "),
         (t.mapsTo || []).map((m) => m.label + " <" + m.href + ">").join("; "),
+        t.standard ? (t.standard.term + " (" + t.standard.match + " match)") : "PTFI original",
         (t.examples || []).join("; "), t.curation || "",
       ].map(q).join(","));
     });
