@@ -2,7 +2,7 @@
    Sources: data/schema.csv (variables) + data/groups.csv (groups + colours).
    Edit those, then run `python build/build.py` (or push - the Action does it). */
 
-window.PTFI_VERSION = { schema: "8.0.0", revised: "2026-06-26" };
+window.PTFI_VERSION = { schema: "8.0.0", revised: "2026-06-29" };
 
 window.PTFI_FACETS = [
   {
