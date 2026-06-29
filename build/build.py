@@ -104,6 +104,7 @@ def build_terms(groups, schema):
                         "match": (r.get("match_type") or "").strip() or "close",
                         "href": standard_href(std_term)}
         terms.append({
+            "key": (r.get("element_id") or "").strip(),
             "name": r["name"], "facet": facet, "required": req_of(r["obligation"]),
             "type": r.get("datatype") or "", "format": (r.get("format") or "").strip(),
             "definition": r.get("definition") or "",

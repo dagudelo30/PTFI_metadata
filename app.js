@@ -76,7 +76,10 @@
     const id = slug(t.name);
     return `<article class="term" id="${id}" data-term-card data-name="${esc(t.name.toLowerCase())}" data-facet="${t.facet}" data-req="${t.required}" data-search="${esc((t.name + " " + t.definition + " " + (t.values || []).join(" ") + " " + (t.curation || "")).toLowerCase())}" style="${facetVars(t.facet)}">
       <div class="term-head">
-        <h3>${esc(t.name)}<a class="anchor-ico" href="#${id}" aria-label="Link to ${esc(t.name)}">#</a></h3>
+        <div class="th-main">
+          <h3>${esc(t.name)}<a class="anchor-ico" href="#${id}" aria-label="Link to ${esc(t.name)}">#</a></h3>
+          ${t.key ? `<code class="term-key">${esc(t.key)}</code>` : ""}
+        </div>
         <div class="badges">
           <span class="badge b-facet">${esc(f.name)}</span>
           <span class="badge b-req" data-r="${t.required}">${esc(REQ_LABEL[t.required])}</span>
@@ -153,13 +156,13 @@
 
   /* ---------- CSV export ---------- */
   function toCSV() {
-    const cols = ["Element", "Facet", "Requirement", "Data type", "Format", "Definition", "Allowed values", "Maps to", "Interoperability", "Examples", "Curation note"];
+    const cols = ["Element ID", "Element", "Facet", "Requirement", "Data type", "Format", "Definition", "Allowed values", "Maps to", "Interoperability", "Examples", "Curation note"];
     const q = (v) => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
     const lines = [cols.map(q).join(",")];
     TERMS.forEach((t) => {
       const f = FACETS.find((x) => x.id === t.facet);
       lines.push([
-        t.name, f.name, REQ_LABEL[t.required], t.type, t.format || "",
+        t.key || "", t.name, f.name, REQ_LABEL[t.required], t.type, t.format || "",
         t.definition, (t.values || []).join("; "),
         (t.mapsTo || []).map((m) => m.label + " <" + m.href + ">").join("; "),
         t.standard ? (t.standard.term + " (" + t.standard.match + " match)") : "PTFI original",
